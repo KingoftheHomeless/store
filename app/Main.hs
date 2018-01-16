@@ -1,23 +1,29 @@
 {-# LANGUAGE FunctionalDependencies, FlexibleInstances, FlexibleContexts, DefaultSignatures, TupleSections, RankNTypes #-}
 module Main where
-import Control.Monad.Store.Class
 import Data.Monoid
+import Data.IORef
+import Control.Monad.Trans
+import Control.Monad.Prescient
+import Control.Monad.State
+import Control.Comonad.State
+import Control.Monad.Warp
+import Control.Monad.Co
 
-testing :: (Monad m, MonadStore (Sum Int) m) => [a] -> m String
-testing start = do
-    write $ Sum . length $ start
-    (Sum now) <- scry
-    if now >= 5 then
-        return $ replicate now 'b'
-    else do
-        write 1
-        return $ replicate now 'a'
+experimental :: (MonadIO m, MonadStR Bool m) => m String
+experimental = do
+    written <- getWriting
+    result  <- getReading
+    when (maybe False not written) (replace True)
+    case result of
+        Just x  | x         -> liftIO (putStrLn "All is fine.") >> return "good"
+                | otherwise -> liftIO (putStrLn "Somebody hates us!") >> return "bad"
+        _                   -> liftIO (putStrLn "reading") >> return "reading"
 
-ex :: MonadStore (Sum Int) m => m String
-ex = store (flip replicate 'c' . getSum) 9
+example :: Co (State [Bool]) String
+example = fromWarp $ Warp $ \ss -> if length (ss mempty) < 10 then (ss [True, True, True, True], "goood") else (mempty, "bad")
 
-hmst :: (MonadStore (Sum Int) m, Enum a) => [a] -> m [Int]
-hmst s = store (\(Sum now) -> map fromEnum (take now s)) mempty
+example2 :: String -> Co (State [Bool]) Bool
+example2 str = fromWarp $ Warp $ \ss -> if str == "goood" then (ss $ replicate 6 False, True) else (replicate 10 False, False)
 
 main :: IO ()
 main = pure ()

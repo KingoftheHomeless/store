@@ -24,6 +24,7 @@ dependencies:
 - comonad >= 5.0.2
 - kan-extensions >= 5.0.2
 - mtl >= 2.2.1
+- transformers >= 0.5.5.0
 
 library:
   source-dirs: src
