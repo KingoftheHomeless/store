@@ -1,5 +1,6 @@
 module Control.Monad.Warp where
 import Control.Monad.Co
+import Control.Comonad
 import Data.Functor.Yoneda
 import Control.Monad.State
 
@@ -61,3 +62,63 @@ fromWarp (Warp m) = co $ \st -> uncurry (runYoneda (liftYoneda m)) ((\(f, a) -> 
     where
         split :: (a -> (b, c)) -> (a -> b, a -> c)
         split f = (fst . f, snd . f)
+
+-- Similar to the Comonad for State.
+instance Comonad (Warp s) where
+    extract m = snd $ runWarp m id
+    duplicate m = Warp $ \ss1 -> (fst $ runWarp m ss1, Warp $ \ss2 -> runWarp m $ ss2 . ss1)
+{-
+Proof that (Warp s) is a comonad:
+
+extract . duplicate == id
+    duplicate m = Warp $ \ss1 -> (fst $ runWarp m ss1, Warp $ \ss2 -> runWarp m $ ss2 . ss1)
+    extract (duplicate m) = snd $ runWarp (duplicate m) id
+    = snd $ (fst $ runWarp m id, Warp $ \ss2 -> runWarp m $ ss2 . id)
+    = Warp $ \ss2 -> runWarp m $ ss2 . id
+    = Warp $ \ss2 -> runWarp m ss2
+    = m
+
+fmap extract . duplicate == id
+    duplicate m = Warp $ \ss1 -> (fst $ runWarp m ss1, Warp $ \ss2 -> runWarp m $ ss2 . ss1)
+    fmap extract (duplicate m) = Warp $ \ss1 -> (fst $ m ss1, extract $ Warp $ \ss2 -> m $ ss2 . ss1)
+    = Warp $ \ss1 -> (fst $ m ss1, snd $ runWarp (Warp $ \ss2 -> m $ ss2 . ss1) id)
+    = Warp $ \ss1 -> (fst $ m ss1, snd $ m $ id . ss1)
+    = Warp $ \ss1 -> (fst $ m ss1, snd $ m ss1)
+    = Warp $ \ss1 -> m ss1
+    = m
+
+-- Sorry about the confusing variable names. This is not as tidy as I would have liked.
+duplicate . duplicate = fmap duplicate . duplicate
+    duplicate . duplicate = 
+        duplicate m = Warp $ \ss1 -> (fst $ runWarp m ss1, Warp $ \ss2 -> runWarp m (ss2 . ss1))
+        duplicate (duplicate m) = Warp $ \ss3 -> (fst $ runWarp (duplicate m) ss3, Warp $ \ss4 -> runWarp (duplicate m) (ss4 . ss3))
+        = Warp $ \ss3 -> (fst $ runWarp (Warp \ss1 -> (fst $ runWarp m ss1, ...)) ss3, ... )
+        = Warp $ \ss3 -> (fst $ (fst $ runWarp m ss3, ...), ... )
+        = Warp $ \ss3 -> (fst $ runWarp m ss3, ...)
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> runWarp (duplicate m) (ss4 . ss3))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> runWarp (\ss1 -> (fst $ runWarp m ss1, Warp $ \ss2 -> runWarp m (ss2 . ss1))) (ss4 . ss3))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), Warp $ \ss2 -> runWarp m (ss2 . (ss4 . ss3))))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), Warp $ \ss2 -> runWarp m (ss2 . ss4 . ss3)))
+        = Warp $ \ss3 -> (fst $ runWarp m ss3, Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), Warp $ \ss2 -> runWarp m (ss2 . ss4 . ss3)))
+
+    fmap duplicate . duplicate =
+        -- Renamed variables to make the later quality more clear
+        duplicate m = Warp $ \ss3 -> (fst $ runWarp m ss3, Warp $ \ss1 -> runWarp m $ ss1 . ss3)
+        fmap duplicate (duplicate m) = Warp $ \ss3 -> (fst $ runWarp m ss3, duplicate $ Warp $ \ss1 -> runWarp m (ss1 . ss3))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (fst $ runWarp (Warp $ \ss1 -> runWarp m (ss1 . ss3)) ss4, Warp $ \ss2 -> runWarp (Warp $ \ss1 -> runWarp m $ ss1 . ss3) (ss2 . ss4)))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (fst $ runWarp (Warp $ \ss1 -> runWarp m (ss1 . ss3)) ss4, ...))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), ...))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (..., Warp $ \ss2 -> runWarp (Warp $ \ss1 -> runWarp m $ ss1 . ss3) (ss2 . ss4)))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (..., Warp $ \ss2 -> runWarp m ((ss2 . ss4) . ss3)))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (..., Warp $ \ss2 -> runWarp m (ss2 . ss4 . ss3)))
+        = Warp $ \ss3 -> (fst $ runWarp m ss3, Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), Warp $ \ss2 -> runWarp m (ss2 . ss4 . ss3)))
+
+    duplicate . duplicate $ m =
+        = Warp $ \ss3 -> (fst $ runWarp m ss3, Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), Warp $ \ss2 -> runWarp m (ss2 . ss4 . ss3)))
+
+    fmap duplicate . duplicate $ m =
+        = Warp $ \ss3 -> (fst $ runWarp m ss3, Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), Warp $ \ss2 -> runWarp m (ss2 . ss4 . ss3)))
+        
+    duplicate . duplicate = fmap duplicate . duplicate
+
+-}
