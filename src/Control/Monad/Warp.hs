@@ -27,7 +27,7 @@ instance Functor (Warp s) where
     fmap f (Warp f') = Warp (fmap f . f')
 
 {-
-    Probable Applicative/Monoid instances. Haven't checked if any laws hold;
+    Probable Applicative/Monad instances. Haven't checked if any laws hold;
     Simply inspected if these instances produces identical results
     in my experiments compared to using Co (State s). So far, I haven't found
     anything wrong with these.
