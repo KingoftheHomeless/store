@@ -3,7 +3,7 @@ import Control.Comonad
 import Control.Comonad.Store
 
 {-
-    Can't do this with only a Monad constraint of w.
+    Can't do this with only a Monad constraint of m.
     It's possible to get the type signature to work, but it will
     inevitably break right and left identity.
     The reason is because a value of type (a) needs to be produced in order to build
