@@ -102,10 +102,11 @@ duplicate . duplicate = fmap duplicate . duplicate
         = Warp $ \ss3 -> (fst $ runWarp m ss3, Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), Warp $ \ss2 -> runWarp m (ss2 . ss4 . ss3)))
 
     fmap duplicate . duplicate =
-        -- Renamed variables to make the later quality more clear
+        -- Renamed variables to make the equality more clear later on
+        -- I might have messed up here and there on the names.
         duplicate m = Warp $ \ss3 -> (fst $ runWarp m ss3, Warp $ \ss1 -> runWarp m $ ss1 . ss3)
         fmap duplicate (duplicate m) = Warp $ \ss3 -> (fst $ runWarp m ss3, duplicate $ Warp $ \ss1 -> runWarp m (ss1 . ss3))
-        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (fst $ runWarp (Warp $ \ss1 -> runWarp m (ss1 . ss3)) ss4, Warp $ \ss2 -> runWarp (Warp $ \ss1 -> runWarp m $ ss1 . ss3) (ss2 . ss4)))
+        = Warp $ \ss3 -> (..., Warp $ \ss4 -> (fst $ runWarp (Warp $ \ss1 -> runWarp m (ss1 . ss3)) ss4, Warp $ \ss2 -> runWarp (Warp $ \ss1 -> runWarp m (ss1 . ss3)) (ss2 . ss4)))
         = Warp $ \ss3 -> (..., Warp $ \ss4 -> (fst $ runWarp (Warp $ \ss1 -> runWarp m (ss1 . ss3)) ss4, ...))
         = Warp $ \ss3 -> (..., Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), ...))
         = Warp $ \ss3 -> (..., Warp $ \ss4 -> (..., Warp $ \ss2 -> runWarp (Warp $ \ss1 -> runWarp m $ ss1 . ss3) (ss2 . ss4)))
