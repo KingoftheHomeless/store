@@ -5,10 +5,10 @@ import Control.Comonad.Store
 {-
     Can't do this with only a Monad constraint of w.
     It's possible to get the type signature to work, but it will
-    inevitable break Right and left identity.
+    inevitably break right and left identity.
     The reason is because a value of type (a) needs to be produced in order to build
     the stored value during binding. Thus, (peek ma mempty) needs to be bound to b,
-    and then the stored value of be is mappended to the stored value of a.
+    and then the stored value of b is mappended to the stored value of a.
     This requires the stored value to also be wrapped in the monad, which results in it
     gaining the effects of (f mempty) during binding.
     Thus, (a >>= pure) is not a, because whatever effects (peek a mempty) have are added
