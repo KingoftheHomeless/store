@@ -89,7 +89,7 @@ fmap extract . duplicate == id
 
 -- Sorry about the confusing variable names. This is not as tidy as I would have liked.
 duplicate . duplicate = fmap duplicate . duplicate
-    duplicate . duplicate = 
+    duplicate . duplicate =
         duplicate m = Warp $ \ss1 -> (fst $ runWarp m ss1, Warp $ \ss2 -> runWarp m (ss2 . ss1))
         duplicate (duplicate m) = Warp $ \ss3 -> (fst $ runWarp (duplicate m) ss3, Warp $ \ss4 -> runWarp (duplicate m) (ss4 . ss3))
         = Warp $ \ss3 -> (fst $ runWarp (Warp \ss1 -> (fst $ runWarp m ss1, ...)) ss3, ... )
@@ -119,7 +119,7 @@ duplicate . duplicate = fmap duplicate . duplicate
 
     fmap duplicate . duplicate $ m =
         = Warp $ \ss3 -> (fst $ runWarp m ss3, Warp $ \ss4 -> (fst $ runWarp m (ss4 . ss3), Warp $ \ss2 -> runWarp m (ss2 . ss4 . ss3)))
-        
+
     duplicate . duplicate = fmap duplicate . duplicate
 
 -}

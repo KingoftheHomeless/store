@@ -135,16 +135,16 @@ class MonadStR s m | m -> s where
     -- Modifies the stored value during writing
     alter :: (s -> s) -> m ()
     alter f = sTr (\s -> ((), f s)) (const ())
-    
+
     getStored :: m (Stored s)
     getStored = getsStored id
 
     getsStored :: (s -> a) -> m (Stored a)
     getsStored f = sTr (\s -> (Writing (f s), s)) (Reading . f)
-    
+
     getWriting :: m (Maybe s)
     getWriting = getsWriting id
-    
+
     getsWriting :: (s -> a) -> m (Maybe a)
     getsWriting f = sTr (\s -> (Just (f s), s)) (const Nothing)
 
@@ -153,7 +153,7 @@ class MonadStR s m | m -> s where
 
     getsReading :: (s -> a) -> m (Maybe a)
     getsReading f = sTr (\s -> (Nothing, s)) (Just . f)
-    
+
     -- The equivalent of scry
     getEither :: m s
     getEither = getsEither id
