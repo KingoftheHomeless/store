@@ -73,7 +73,7 @@ extend f . extend g = extend (f . extend g)
         = \wf s -> (..., snd $ extract (extend (help g) wf) s)
             -- extract . extend f = f
         = \wf s -> (..., snd $ (help g) wf s)
-        = \wf s -> (..., snd $ (\wf' s' -> (..., snd $ extract wf' s') wf s)
+        = \wf s -> (..., snd $ (\wf' s' -> (..., snd $ extract wf' s')) wf s)
         = \wf s -> (..., snd $ (..., snd $ extract wf s))
         = \wf s -> (..., snd $ extract wf s)
         = \wf s -> (f (StateCT (fmap (. mappend s) (extend (help g) wf))), ...)
@@ -91,6 +91,7 @@ extend f . extend g = extend (f . extend g)
 
         -- thus
         (\wf s -> help f (extend (help g) wf) s)
+        = \wf s -> (f (StateCT (extend ((. mappend s) . help g) wf)), ...)
         = \wf s -> (f (StateCT (extend (\wf' s' -> help g wf' (mappend s s')) wf)), ...)
         = \wf s -> (f (StateCT (extend (\wf' s' -> help g wf' (mappend s s')) wf)), snd $ extract wf s)
 
