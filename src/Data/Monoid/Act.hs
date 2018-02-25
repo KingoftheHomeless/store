@@ -4,6 +4,7 @@ module Data.Monoid.Act where
 This module defines the oh-so-cleverly named Act,
 which, based off a Monoid, may be used to create "embeddings"
 of it, and the corresponding monoids/actions.
+(And yes, I'm aware that these cause overlapping issues.)
 
     instance Semigroup s => Action s (Act p s)
 
@@ -68,6 +69,12 @@ instance (Semigroup p, Monoid p) => Monoid (Act p ()) where
 
 instance Semigroup p => Semigroup (Act s (Act s p)) where
     Act ps's1 <> Act ps's2 = Act $ \ps -> ps's2 $ Act $ \p1 -> ps's1 $ act p1 ps
+
+{-
+Theres an
+    
+
+-}
 
 instance (Semigroup p, Monoid p) => Monoid (Act s (Act s p)) where
     mempty  = Act $ \(Act f) -> f mempty
