@@ -4,8 +4,8 @@ module Data.Monoid.Act where
 This module defines the oh-so-cleverly named Act,
 which, based off a Monoid, may be used to create "embeddings"
 of it, and the corresponding monoids/actions.
-(And yes, I'm aware that these cause overlapping issues.)
 
+(These cause overlapping issues. I should've read the docs for Data.Monoid.Action a bit closer.)
     instance Semigroup s => Action s (Act p s)
 
     instance Semigroup p => Semigroup (Act s (Act s p))
@@ -59,7 +59,6 @@ type (<-:) = Act
 instance Semigroup s => Action s (Act p s) where
     act s1 (Act f) = Act $ \s2 -> f (s1 <> s2)
 
-
 instance Semigroup p => Semigroup (Act p ()) where
     Act a <> Act b = Act $ const $ a () <> b ()
 
@@ -68,21 +67,14 @@ instance (Semigroup p, Monoid p) => Monoid (Act p ()) where
     mappend = (<>)
 
 instance Semigroup p => Semigroup (Act s (Act s p)) where
-    Act ps's1 <> Act ps's2 = Act $ \ps -> ps's2 $ Act $ \p1 -> ps's1 $ act p1 ps
-
-{-
-Theres an
-    
-
--}
+    Act ps's1 <> Act ps's2 = Act $ \ps -> ps's2 $ Act $ \p1 -> ps's1 $ Act $ \p2 -> runAct ps (p1 <> p2)
 
 instance (Semigroup p, Monoid p) => Monoid (Act s (Act s p)) where
     mempty  = Act $ \(Act f) -> f mempty
     mappend = (<>)
 
-instance Coaction (Act p s) s where
+instance Coaction s (Act p s) where
     reflect f = Act $ \s -> runAct (f s) s
 
--- I don't actually know if this works. Probably not.
-instance (Semigroup p, Coaction p s) => Action (Act p s) p where
+instance (Semigroup p, Coaction s p) => Action (Act p s) p where
     act f p = reflect (runAct f) <> p

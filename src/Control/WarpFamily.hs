@@ -4,7 +4,10 @@ module Control.WarpFamily where
 -- The Warp family, formed by chaining "Act"s
 -- As these are both monads and comonads, I didn't really know where to put them.
 
+-- import Data.Semigroup
+-- import Control.Monad.State
 import Data.Monoid.Act
+-- import Data.Monoid.Coaction
 import Control.Comonad
 import Control.Comonad.Update
 import Control.Monad.Coupdate
@@ -76,6 +79,26 @@ type Cowarp0 s = Cowarper Zero s
 -- Binds differently from State.
 -- Always a monad. Comonad when s is a monoid.
 type Cowarp1 s = Cowarper One s
+
+{-
+type State' s = Coupdate (ReaderActor s) (Endo (ReaderActor s))
+
+instance MonadState s (State' s) where
+    state f = Coupdate (fst . f . runReaderActor) ( Endo $ ReaderActor . snd . f . runReaderActor)
+
+runState' :: State' s a -> s -> (a, s)
+runState' (Coupdate sa ss) s = (sa (ReaderActor s), runReaderActor $ appEndo ss (ReaderActor s))
+
+testS :: MonadState String m => m String
+testS = do
+    a <- get
+    when (a == "wow") $ put "whoa"
+    b <- get
+    when (b == "whoa") $ modify (++ "why")
+    c <- get
+    return $ unwords [a, b, c]
+-}
+
 
 -- Isomorphic to Warp1. Binds differently from it.
 -- Monad when s is a monoid. Always a comonad.

@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, DeriveFunctor #-}
+{-# LANGUAGE TupleSections, DeriveFunctor, FlexibleInstances, MultiParamTypeClasses #-}
 module Control.Monad.Coupdate where
 
 -- The Coupdate monad.
@@ -10,18 +10,51 @@ import Data.Monoid.Coaction
 import Control.Comonad
 
 -- I've had absolutely no luck finding a monad transformer of this.
-data Coupdate p s a = Coupdate { peek :: s -> a, pos :: p } deriving (Functor)
+data Coupdate s p a = Coupdate { peek :: s -> a, pos :: p } deriving (Functor)
 
-instance (Semigroup p, Monoid p) => Applicative (Coupdate p s) where
+-- It should be possible to make the Applicative/Monad instance of Coupdate be even more general. Perhaps by doing the following?
+{-
+
+class Action p s => Superaction s p where
+    react :: p -> (s -> p) -> p
+
+instance (Semigroup p, Monoid p, Superaction s p) => Applicative (Coupdate s p) where
+    pure a = Coupdate (const a) mempty
+    (<*>) = ap
+
+instance (Semigroup p, Monoid p, Superaction s p) => Monad (Coupdate s p) where
+    m >>= f = Coupdate
+        (\s -> peek (f $ peek m s) $ act (pos m) s)
+        (pos m <> react (pos m) (pos . f . peek m))
+
+-- This would allow you to encode the update monad in the Coupdate monad, through the following:
+
+newtype Reader s p = Reader { runReader :: s -> p }
+
+type Update s p a = Coupdate s (Reader s p)
+
+instance Semigroup p => Semigroup (Reader s p) where
+    a <> b = Reader $ \s -> runReader a s <> runReader b s
+
+instance Action p s => Action (Reader s p) s where
+    act f s = act (runReader f s) s
+
+instance Action p s => Superaction s (Reader s p) where
+    react a f = Reader $ \s -> runReader (f s) $ act a s
+
+-- Question is, what laws could there be for Superaction to guarantee that Coupdate is a monad, if possible at all.
+-}
+
+instance (Semigroup p, Monoid p) => Applicative (Coupdate s p) where
     pure a = Coupdate (const a) mempty
     Coupdate sf p1 <*> Coupdate sa p2 = Coupdate (\s -> sf s $ sa s) (p1 <> p2)     -- TODO: check (<*>) = ap
 
-instance (Semigroup p, Monoid p, Coaction p s) => Monad (Coupdate p s) where
+instance (Semigroup p, Monoid p, Coaction s p) => Monad (Coupdate s p) where
     m >>= f = Coupdate
         (\s -> peek (f $ peek m s) s)
         (pos m <> reflect (pos . f . peek m))
 
-instance (Monoid p, Action p s) => Comonad (Coupdate s p) where
+instance (Monoid s, Action s p) => Comonad (Coupdate s p) where
     extract (Coupdate wf _) = wf mempty
     extend k (Coupdate wf p) = Coupdate (\s -> k $ Coupdate wf (act s p)) p
 
@@ -128,7 +161,6 @@ join . join = join . fmap join
         = Coupdate
             (\s -> peek (peek (peek m s) s) s)
             (pos m <> reflect f <> reflect (\s' -> pos $ peek (peek m s') s'))
-
 
     join . join = fmap join . join
 

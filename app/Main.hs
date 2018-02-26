@@ -7,6 +7,7 @@ import Control.Monad.State
 import Control.WarpFamily
 import Control.Comonad.Update
 import Control.Monad.Coupdate
+import Data.Semigroup
 import Data.Monoid.Action
 import Data.Monoid.Coaction
 import Data.Monoid.Act
@@ -60,3 +61,25 @@ main = pure ()
 
 -- instance (MonadIO m, Monoid s) => MonadIO (WStoreT s m) where
 --     liftIO = lift . liftIO
+
+newtype TrivialMaybe a = TrivialMaybe { runTrivialMaybe :: Maybe a }
+
+type Prescient s = Coupdate (TrivialMaybe s) s
+
+instance Coaction (TrivialMaybe s) s where
+    reflect = ($ TrivialMaybe Nothing)
+
+runPrescient :: Prescient s a -> (a, s)
+runPrescient m = (peek m . TrivialMaybe . Just . pos $ m, pos m)
+
+instance (Semigroup s, Monoid s) => MonadWtR s (Prescient s) where
+    wTr (a, s) f = Coupdate (maybe a f . runTrivialMaybe) s
+
+test :: (Monad m, MonadWtR String m) => m String
+test = do
+    now <- scry
+    if now == Just "abra" then
+        return "coolio"
+    else do
+        write "abra"
+        return "unseen"
