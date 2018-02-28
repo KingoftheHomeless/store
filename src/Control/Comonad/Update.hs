@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, DeriveFunctor, FlexibleInstances #-}
+{-# LANGUAGE TupleSections, GADTs, DeriveFunctor, FlexibleInstances, DefaultSignatures, FunctionalDependencies, ScopedTypeVariables, UndecidableInstances #-}
 module Control.Comonad.Update where
 
 -- The update comonad transformer.
@@ -10,7 +10,11 @@ import Control.Applicative
 import Control.Comonad
 import Control.Monad.Identity
 
+
 -- There's a monad transfomer version of Update too, which is well known.
+-- ***** Actually, this is just CoreaderT p (TracedT s w) a *****
+-- Bit of a shame. Any way to make it more interesting?
+-- Probably, yeah, by using Co/Action (or maybe even Superaction?)
 newtype UpdateCT p s w a = UpdateCT { runUpdateCT :: w (s -> (a, p)) } deriving (Functor)
 
 type Update p s = UpdateCT p s Identity
@@ -317,3 +321,5 @@ extend f . extend g = extend (f . extend g)
     Update is a comonad, given that s is a monoid.
 
 -}
+
+
