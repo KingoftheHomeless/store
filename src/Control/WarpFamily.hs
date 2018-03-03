@@ -8,7 +8,7 @@ module Control.WarpFamily where
 -- import Control.Monad.State
 import Data.Monoid.Act
 -- import Data.Monoid.Coaction
-import Control.Comonad
+-- import Control.Comonad
 import Control.Comonad.Update
 import Control.Monad.Coupdate
 
@@ -44,8 +44,8 @@ type Warp1 s = Warper One s
 warp1M :: Warp1 [Bool] String
 warp1M = return "warp1"
 
-warp1C :: String
-warp1C = extract warp1M
+-- warp1C :: String
+-- warp1C = extract warp1M
 
 -- This is Co (Warp1 s)
 -- Isomorphic to ((s -> s) -> s) -> (s -> s, a)
@@ -55,8 +55,8 @@ type Warp2 s = Warper Two s
 warp2M :: Warp2 [Bool] String
 warp2M = return "warp2"
 
-warp2C :: String
-warp2C = extract warp2M
+-- warp2C :: String
+-- warp2C = extract warp2M
 
 -- This is Co (Warp2 s)
 -- Isomorphic to (((s -> s) -> s) -> s) -> ((s -> s) -> s, a)
@@ -66,8 +66,8 @@ type Warp3 s = Warper Three s
 warp3M :: Warp3 [Bool] String
 warp3M = return "warp3"
 
-warp3C :: String
-warp3C = extract warp3M
+-- warp3C :: String
+-- warp3C = extract warp3M
 
 
 
