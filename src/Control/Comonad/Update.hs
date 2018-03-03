@@ -38,8 +38,13 @@ instance (Semigroup p, Monoid p, Action p s) => Monad (Update p s) where
             ~(b, p2)    = runUpdate (f a) (act p1 s)
         in
             (b, p1 <> p2)
+{-
+    I'll need to prove this... Non-transformer version is proven.
 
--- I'll need to prove this... Non-transformer version is proven.
+    If I change "fst . sap $ s1 <> s2" to "fst . sap $ s2 <> s1", then the Reaction laws would change such that Reaction s p would become identical to Action s (s -> p)
+    That would be somewhat confusing though. For one, the default instance of Reaction would become:
+    react s1 f s2 = f (s2 <> s1)
+-}
 instance (Semigroup s, Monoid s, Reaction s p, Comonad w) => Comonad (UpdateCT p s w) where
     extract = fst . ($ mempty) . extract . runUpdateCT
     extend f = UpdateCT . extend (\wf s1 -> (f . UpdateCT $ fmap (\sap s2 -> (fst . sap $ s1 <> s2, react' s1 s2 (snd . sap))) wf, snd $ extract wf s1)) . runUpdateCT
